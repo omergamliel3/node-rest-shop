@@ -11,7 +11,7 @@ const ordersRoutes = require('./api/routes/orders');
 mongoose.connect(
     'mongodb+srv://admin:' +
     process.env.MONGO_ATLAS_PW +
-    '@cluster0.noupx.mongodb.net/test?retryWrites=true&w=majority'
+    '@cluster0.noupx.mongodb.net/rest-shop-api?retryWrites=true&w=majority'
 );
 
 // Setup morgan middleware
