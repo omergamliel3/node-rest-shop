@@ -1,11 +1,26 @@
 const express = require("express");
 const router = express.Router();
 
+const Order = require("../models/order");
+
 // Handle incoming GET requests to /orders
 router.get("/", (req, res, next) => {
-  res.status(200).json({
-    message: "Orders were fetched",
-  });
+  Order.find()
+    .exec()
+    .then((docs) => {
+      console.log(docs);
+      if (docs) {
+        res.status(200).json(docs);
+      } else {
+        res.status(404).json({ message: "No entries found in database" });
+      }
+    })
+    .catch((error) => {
+      console.log(error);
+      res.status(500).json({
+        error: error,
+      });
+    });
 });
 
 // Handle incoming POST requests to /orders
