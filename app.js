@@ -2,9 +2,20 @@ const express = require('express')
 const app = express();
 const morgan = require('morgan')
 const bodyParser = require('body-parser')
+const mongoose = require('mongoose')
 
-const productsRoutes = require('./api/routes/products')
-const ordersRoutes = require('./api/routes/orders')
+const productsRoutes = require('./api/routes/products');
+const ordersRoutes = require('./api/routes/orders');
+
+// Setup mongoose
+mongoose.connect(
+    'mongodb+srv://admin:' +
+    process.env.MONGO_ATLAS_PW +
+    '@cluster0.noupx.mongodb.net/test?retryWrites=true&w=majority',
+    {
+        useMongoClient: true
+    }
+);
 
 // Setup morgan middleware
 app.use(morgan('dev'));
