@@ -1,11 +1,11 @@
-const mongoose = require('mongoose')
+const mongoose = require("mongoose");
 
 // Create product mongoDB schema
 const productSchema = mongoose.Schema({
-        _id: mongoose.Schema.Types.ObjectId,
-        name: String,
-        price: Number
-    });
+  _id: mongoose.Schema.Types.ObjectId,
+  name: String,
+  price: Number,
+});
 
 // Exports the product schema
-module.exports = mongoose.model('Product', productSchema);
+module.exports = mongoose.model("Product", productSchema);
