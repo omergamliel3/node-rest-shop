@@ -74,92 +74,77 @@ router.post("/", (req, res, next) => {
 router.get("/:productId", (req, res, next) => {
   // Extract product id from request body
   const id = req.params.productId;
-  // Return 404 and error message if id is null
-  if (id == null || id == "") {
-    res.status(404).json({
-      error: {
-        message: "No ID passed",
-      },
-    });
-  } else {
-    // find product by the passed id
-    Product.findById(id)
-      .exec()
-      .then((doc) => {
-        console.log(doc);
-        if (doc) {
-          res.status(200).json(doc);
-        } else {
-          res
-            .status(404)
-            .json({ message: "No valid entry found for provided ID" });
-        }
-      })
-      .catch((error) => {
-        console.log(error);
-        res.status(500).json({
-          error: error,
-        });
+
+  // find product by the passed id
+  Product.findById(id)
+    .exec()
+    .then((doc) => {
+      console.log(doc);
+      if (doc) {
+        res.status(200).json(doc);
+      } else {
+        res
+          .status(404)
+          .json({ message: "No valid entry found for provided ID" });
+      }
+    })
+    .catch((error) => {
+      console.log(error);
+      res.status(500).json({
+        error: error,
       });
-  }
+    });
 });
 
 // Handle incoming PATCH requests to /products/productId
 router.patch("/:productId", (req, res, next) => {
   const id = req.params.productId;
-  if (id == "" || id == null) {
-    res.status(404).json({
-      message: "No ID passed",
-    });
-  } else {
-    // Extract product name and price from request body
-    const updatedProduct = { name: req.body.name, price: req.body.price };
-    Product.findByIdAndUpdate(id, updatedProduct)
-      .exec()
-      .then((doc) => {
-        console.log(doc);
-        res.status(200).json({
-          message: "Product updated!",
-          id: id,
-        });
-      })
-      .catch((error) => {
-        console.log(error);
-        res.status(500).json({
-          error: error,
-        });
-      });
+  const updateOps = {};
+  if (req.body.name != undefined) {
+    updateOps["name"] = req.body.name;
   }
+  if (req.body.price != undefined) {
+    updateOps["price"] = req.body.price;
+  }
+
+  Product.update({ _id: id }, { $set: updateOps })
+    .exec()
+    .then((doc) => {
+      console.log(doc);
+      res.status(200).json({
+        message: "Product updated!",
+        id: id,
+      });
+    })
+    .catch((error) => {
+      console.log(error);
+      res.status(500).json({
+        error: error,
+      });
+    });
 });
 
 // Handle incoming DELETE requests to /products/productId
 router.delete("/:productId", (req, res, next) => {
   const id = req.params.productId;
 
-  // Null check for product id
-  if (id == "" || id == null) {
-    res.status(404).json({
-      message: "No ID passed",
-    });
-  } else {
-    // Find product with the given id
-    Product.findByIdAndDelete(id)
-      .exec()
-      .then((result) => {
-        console.log(result);
-        res.status(200).json({
-          message: "Deleted product!",
-          id: id,
-        });
-      })
-      .catch((error) => {
-        console.log(error);
-        res.status(404).json({
-          message: "No valid entry found for provided ID",
-          id: id,
-        });
+  // Find product with the given id
+  Product.remove({ _id: id })
+    .exec()
+    .then((result) => {
+      console.log(result);
+      res.status(200).json({
+        message: "Deleted product!",
+        id: id,
       });
-  }
+    })
+    .catch((error) => {
+      console.log(error);
+      res.status(404).json({
+        message: "No valid entry found for provided ID",
+        id: id,
+      });
+    });
 });
 
 module.exports = router;
