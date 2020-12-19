@@ -3,8 +3,8 @@ const mongoose = require("mongoose");
 // Create order mongoDB schema
 const orderSchema = mongoose.Schema({
   _id: mongoose.Schema.Types.ObjectId,
-  productId: String,
-  quantity: Number,
+  productId: { type: String, required: true },
+  quantity: { type: Number, required: true },
 });
 
 // Exports the product schema
