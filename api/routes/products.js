@@ -6,6 +6,7 @@ const Product = require("../models/product");
 
 // Handle incoming GET requests to /products
 router.get("/", (req, res, next) => {
+  // Get all product from the database
   Product.find()
     .select("name price _id")
     .exec()
@@ -51,7 +52,7 @@ router.post("/", (req, res, next) => {
   product
     .save()
     .then((doc) => {
-      res.status(201).json({
+      const response = {
         message: "Created product successfully",
         createdProduct: {
           id: doc._id,
@@ -62,7 +63,8 @@ router.post("/", (req, res, next) => {
             url: "http://localhost:3000/products/" + doc._id,
           },
         },
-      });
+      };
+      res.status(201).json(response);
     })
     .catch((error) => {
       console.log(error);
@@ -77,7 +79,7 @@ router.get("/:productId", (req, res, next) => {
   // Extract product id from request body
   const id = req.params.productId;
 
-  // find product by the passed id
+  // Find product with the given id
   Product.findById(id)
     .select("name price _id")
     .exec()
@@ -113,17 +115,18 @@ router.patch("/:productId", (req, res, next) => {
   if (req.body.price != undefined) {
     updateOps["price"] = req.body.price;
   }
-
+  // Update product 
   Product.update({ _id: id }, { $set: updateOps })
     .exec()
     .then((result) => {
-      res.status(200).json({
+      const response = {
         message: "Product updated",
         request: {
           type: "GET",
           url: "http://localhost:3000/products/" + id,
         },
-      });
+      };
+      res.status(200).json(response);
     })
     .catch((error) => {
       console.log(error);
