@@ -1,6 +1,38 @@
 const express = require("express");
 const router = express.Router();
 const mongoose = require("mongoose");
+const multer = require("multer");
+
+// Create a multer disk storage
+const storage = multer.diskStorage({
+  destination: function (req, file, callback) {
+    callback(null, "./uploads/");
+  },
+  filename: function (req, file, callback) {
+    callback(null, file.originalname);
+  },
+});
+
+// Create a file filter, only accept jpeg and png format
+const fileFilter = (req, file, callback) => {
+  // accept a file
+  if (file.mimetype === "image/jpeg" || file.mimetype === "image/png") {
+    callback(null, true);
+  }
+  // reject a file
+  else {
+    callback(new Error("Bad file type"), false);
+  }
+};
+
+// Config multer
+const upload = multer({
+  storage: storage,
+  limits: {
+    fieldSize: 1024 * 1024 * 5,
+  },
+  fileFilter: fileFilter,
+});
 
 const Product = require("../models/product");
 
@@ -8,7 +40,7 @@ const Product = require("../models/product");
 router.get("/", (req, res, next) => {
   // Get all products from the database
   Product.find()
-    .select("name price _id")
+    .select("name price _id productImage")
     .exec()
     .then((docs) => {
       const response = {
@@ -18,6 +50,7 @@ router.get("/", (req, res, next) => {
             id: doc._id,
             name: doc.name,
             price: doc.price,
+            productImage: doc.productImage || "No product image available",
             request: {
               type: "GET",
               url: "http://localhost:3000/products/" + doc._id,
@@ -36,16 +69,13 @@ router.get("/", (req, res, next) => {
 });
 
 // Handle incoming POST requests to /products
-router.post("/", (req, res, next) => {
-  // Extract product name and price from request body
-  const reqName = req.body.name;
-  const reqPrice = req.body.price;
-
+router.post("/", upload.single("productImage"), (req, res, next) => {
   // Create new Product instance
   const product = new Product({
     _id: new mongoose.Types.ObjectId(),
-    name: reqName,
-    price: reqPrice,
+    name: req.body.name,
+    price: req.body.price,
+    productImage: req.file.path,
   });
 
   // Insert new Product to the database
@@ -58,6 +88,7 @@ router.post("/", (req, res, next) => {
           id: doc._id,
           name: doc.name,
           price: doc.price,
+          productImage: doc.productImage || "No product image available",
           request: {
             type: "GET",
             url: "http://localhost:3000/products/" + doc._id,
@@ -81,7 +112,7 @@ router.get("/:productId", (req, res, next) => {
 
   // Find product with the given id
   Product.findById(id)
-    .select("name price _id")
+    .select("name price _id productImage")
     .exec()
     .then((doc) => {
       console.log(doc);
@@ -90,6 +121,7 @@ router.get("/:productId", (req, res, next) => {
           id: doc._id,
           name: doc.name,
           price: doc.price,
+          productImage: doc.productImage || "No product image available",
         });
       } else {
         res
@@ -151,7 +183,7 @@ router.delete("/:productId", (req, res, next) => {
     .catch((error) => {
       res.status(404).json({
         message: "No valid entry found for provided ID",
-        error: error
+        error: error,
       });
     });
 });
