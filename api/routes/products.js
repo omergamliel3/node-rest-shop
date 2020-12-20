@@ -6,7 +6,7 @@ const Product = require("../models/product");
 
 // Handle incoming GET requests to /products
 router.get("/", (req, res, next) => {
-  // Get all product from the database
+  // Get all products from the database
   Product.find()
     .select("name price _id")
     .exec()
@@ -48,7 +48,7 @@ router.post("/", (req, res, next) => {
     price: reqPrice,
   });
 
-  // Saves this document by inserting a new document into the database
+  // Insert new Product to the database
   product
     .save()
     .then((doc) => {
@@ -115,7 +115,7 @@ router.patch("/:productId", (req, res, next) => {
   if (req.body.price != undefined) {
     updateOps["price"] = req.body.price;
   }
-  // Update product 
+  // Update product
   Product.update({ _id: id }, { $set: updateOps })
     .exec()
     .then((result) => {
@@ -151,6 +151,7 @@ router.delete("/:productId", (req, res, next) => {
     .catch((error) => {
       res.status(404).json({
         message: "No valid entry found for provided ID",
+        error: error
       });
     });
 });
