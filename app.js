@@ -17,6 +17,9 @@ mongoose.connect(
 // Setup morgan middleware
 app.use(morgan("dev"));
 
+// Expose uploads image folder to /uploads 
+app.use("/uploads", express.static("uploads"));
+
 // Setup bodyParser middleware
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
