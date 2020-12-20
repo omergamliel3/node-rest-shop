@@ -1,7 +1,6 @@
 const express = require("express");
 const router = express.Router();
 const mongoose = require("mongoose");
-const { discriminator } = require("../models/order");
 
 const Order = require("../models/order");
 const Product = require("../models/product");
