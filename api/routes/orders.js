@@ -11,6 +11,7 @@ router.get("/", (req, res, next) => {
   // Get all orders from the database
   Order.find()
     .select("product quantity _id")
+    .populate("product", "_id name price")
     .exec()
     .then((docs) => {
       const response = {
@@ -72,6 +73,7 @@ router.post("/", (req, res, next) => {
 // Handle incoming GET requests to /orders/orderId
 router.get("/:orderId", (req, res, next) => {
   Order.findById(req.params.orderId)
+    .populate("product", "_id name price")
     .exec()
     .then((doc) => {
       const response = {
