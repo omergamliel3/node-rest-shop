@@ -6,7 +6,9 @@ const mongoose = require("mongoose");
 
 const productsRoutes = require("./api/routes/products");
 const ordersRoutes = require("./api/routes/orders");
+const usersRoutes = require("./api/routes/users");
 
+usersRoutes;
 // Setup mongoose
 mongoose.connect(
   "mongodb+srv://admin:" +
@@ -17,7 +19,7 @@ mongoose.connect(
 // Setup morgan middleware
 app.use(morgan("dev"));
 
-// Expose uploads image folder to /uploads 
+// Expose uploads image folder to /uploads
 app.use("/uploads", express.static("uploads"));
 
 // Setup bodyParser middleware
@@ -43,6 +45,7 @@ app.use((req, res, next) => {
 // Routes which should handle requests
 app.use("/products", productsRoutes);
 app.use("/orders", ordersRoutes);
+app.use("/users", usersRoutes);
 
 // Handle routes error
 app.use((req, res, next) => {
