@@ -1,12 +1,12 @@
 const express = require("express");
 const router = express.Router();
 const mongoose = require("mongoose");
-
 const Order = require("../models/order");
 const Product = require("../models/product");
+const checkAuth = require("../middleware/check_auth");
 
 // Handle incoming GET requests to /orders
-router.get("/", async (req, res, next) => {
+router.get("/", checkAuth, async (req, res, next) => {
   try {
     // Find order from the database
     const docs = await Order.find()
@@ -35,7 +35,7 @@ router.get("/", async (req, res, next) => {
 });
 
 // Handle incoming POST requests to /orders
-router.post("/", async (req, res, next) => {
+router.post("/", checkAuth, async (req, res, next) => {
   try {
     // Find product by id
     const product = await Product.findById(req.body.productId);
@@ -68,7 +68,7 @@ router.post("/", async (req, res, next) => {
 });
 
 // Handle incoming GET requests to /orders/orderId
-router.get("/:orderId", async (req, res, next) => {
+router.get("/:orderId", checkAuth, async (req, res, next) => {
   try {
     // Find order by id
     const doc = await Order.findById(req.params.orderId).populate(
@@ -93,7 +93,7 @@ router.get("/:orderId", async (req, res, next) => {
 });
 
 // Handle incoming DELETE requests to /orders/:orderId
-router.delete("/:orderId", async (req, res, next) => {
+router.delete("/:orderId", checkAuth, async (req, res, next) => {
   try {
     // Find order by id
     const result = await Order.remove({ _id: req.params.orderId });

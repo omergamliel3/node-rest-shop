@@ -3,6 +3,7 @@ const router = express.Router();
 const mongoose = require("mongoose");
 const multer = require("multer");
 const Product = require("../models/product");
+const checkAuth = require("../middleware/check_auth");
 
 // Create a multer disk storage
 const storage = multer.diskStorage({
@@ -67,41 +68,42 @@ router.get("/", async (req, res, next) => {
 });
 
 // Handle incoming POST requests to /products
-router.post("/", upload.single("productImage"), async (req, res, next) => {
-  // Create new Product instance
-  const product = new Product({
-    _id: new mongoose.Types.ObjectId(),
-    name: req.body.name,
-    price: req.body.price,
-    productImage: req.file.path,
-  });
-
-  try {
-    // Insert new Product to the database
-    const doc = await product.save();
-    // Create response object
-    const response = {
-      message: "Created product successfully",
-      createdProduct: {
-        id: doc._id,
-        name: doc.name,
-        price: doc.price,
-        productImage: doc.productImage || "No product image available",
-        request: {
-          type: "GET",
-          url: "http://localhost:3000/products/" + doc._id,
-        },
-      },
-    };
-    // Success response
-    res.status(201).json(response);
-  } catch (error) {
-    // Error response
-    res.status(500).json({
-      error: error,
+router.post(
+  "/",
+  checkAuth,
+  upload.single("productImage"),
+  async (req, res, next) => {
+    // Create new Product instance
+    const product = new Product({
+      _id: new mongoose.Types.ObjectId(),
+      name: req.body.name,
+      price: req.body.price,
+      productImage: req.file.path,
     });
+
+    try {
+      // Insert new Product to the database
+      const doc = await product.save();
+      // Create response object
+      const response = {
+        message: "Created product successfully",
+        createdProduct: {
+          id: doc._id,
+          name: doc.name,
+          price: doc.price,
+          productImage: doc.productImage || "No product image available",
+        },
+      };
+      // Success response
+      res.status(201).json(response);
+    } catch (error) {
+      // Error response
+      res.status(500).json({
+        error: error,
+      });
+    }
   }
-});
+);
 
 // Handle incoming GET requests to /products/productId
 router.get("/:productId", async (req, res, next) => {
@@ -131,7 +133,7 @@ router.get("/:productId", async (req, res, next) => {
 });
 
 // Handle incoming PATCH requests to /products/productId
-router.patch("/:productId", async (req, res, next) => {
+router.patch("/:productId", checkAuth, async (req, res, next) => {
   // product id
   const id = req.params.productId;
   // update operations
@@ -150,10 +152,6 @@ router.patch("/:productId", async (req, res, next) => {
     await Product.update({ _id: id }, { $set: updateOps });
     const response = {
       message: "Product updated",
-      request: {
-        type: "GET",
-        url: "http://localhost:3000/products/" + id,
-      },
     };
     // Success response
     res.status(200).json(response);
@@ -166,7 +164,7 @@ router.patch("/:productId", async (req, res, next) => {
 });
 
 // Handle incoming DELETE requests to /products/productId
-router.delete("/:productId", async (req, res, next) => {
+router.delete("/:productId", checkAuth, async (req, res, next) => {
   // product id
   const id = req.params.productId;
   try {
