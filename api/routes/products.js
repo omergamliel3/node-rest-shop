@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const mongoose = require("mongoose");
 const multer = require("multer");
+const Product = require("../models/product");
 
 // Create a multer disk storage
 const storage = multer.diskStorage({
@@ -34,57 +35,16 @@ const upload = multer({
   fileFilter: fileFilter,
 });
 
-const Product = require("../models/product");
-
 // Handle incoming GET requests to /products
-router.get("/", (req, res, next) => {
-  // Get all products from the database
-  Product.find()
-    .select("name price _id productImage")
-    .exec()
-    .then((docs) => {
-      const response = {
-        count: docs.length,
-        products: docs.map((doc) => {
-          return {
-            id: doc._id,
-            name: doc.name,
-            price: doc.price,
-            productImage: doc.productImage || "No product image available",
-            request: {
-              type: "GET",
-              url: "http://localhost:3000/products/" + doc._id,
-            },
-          };
-        }),
-      };
-      res.status(200).json(response);
-    })
-    .catch((error) => {
-      console.log(error);
-      res.status(500).json({
-        error: error,
-      });
-    });
-});
-
-// Handle incoming POST requests to /products
-router.post("/", upload.single("productImage"), (req, res, next) => {
-  // Create new Product instance
-  const product = new Product({
-    _id: new mongoose.Types.ObjectId(),
-    name: req.body.name,
-    price: req.body.price,
-    productImage: req.file.path,
-  });
-
-  // Insert new Product to the database
-  product
-    .save()
-    .then((doc) => {
-      const response = {
-        message: "Created product successfully",
-        createdProduct: {
+router.get("/", async (req, res, next) => {
+  try {
+    // Get all products from the database
+    const docs = await Product.find().select("name price _id productImage");
+    // Create response
+    const response = {
+      count: docs.length,
+      products: docs.map((doc) => {
+        return {
           id: doc._id,
           name: doc.name,
           price: doc.price,
@@ -93,99 +53,136 @@ router.post("/", upload.single("productImage"), (req, res, next) => {
             type: "GET",
             url: "http://localhost:3000/products/" + doc._id,
           },
-        },
-      };
-      res.status(201).json(response);
-    })
-    .catch((error) => {
-      console.log(error);
-      res.status(500).json({
-        error: error,
-      });
+        };
+      }),
+    };
+    // Success response
+    res.status(200).json(response);
+  } catch (error) {
+    // Error response
+    res.status(500).json({
+      error: error,
     });
+  }
+});
+
+// Handle incoming POST requests to /products
+router.post("/", upload.single("productImage"), async (req, res, next) => {
+  // Create new Product instance
+  const product = new Product({
+    _id: new mongoose.Types.ObjectId(),
+    name: req.body.name,
+    price: req.body.price,
+    productImage: req.file.path,
+  });
+
+  try {
+    // Insert new Product to the database
+    const doc = await product.save();
+    // Create response object
+    const response = {
+      message: "Created product successfully",
+      createdProduct: {
+        id: doc._id,
+        name: doc.name,
+        price: doc.price,
+        productImage: doc.productImage || "No product image available",
+        request: {
+          type: "GET",
+          url: "http://localhost:3000/products/" + doc._id,
+        },
+      },
+    };
+    // Success response
+    res.status(201).json(response);
+  } catch (error) {
+    // Error response
+    res.status(500).json({
+      error: error,
+    });
+  }
 });
 
 // Handle incoming GET requests to /products/productId
-router.get("/:productId", (req, res, next) => {
-  // Extract product id from request body
-  const id = req.params.productId;
-
-  // Find product with the given id
-  Product.findById(id)
-    .select("name price _id productImage")
-    .exec()
-    .then((doc) => {
-      console.log(doc);
-      if (doc) {
-        res.status(200).json({
-          id: doc._id,
-          name: doc.name,
-          price: doc.price,
-          productImage: doc.productImage || "No product image available",
-        });
-      } else {
-        res
-          .status(404)
-          .json({ message: "No valid entry found for provided ID" });
-      }
-    })
-    .catch((error) => {
-      console.log(error);
-      res.status(500).json({
-        error: error,
+router.get("/:productId", async (req, res, next) => {
+  try {
+    // Find product with the given id
+    const doc = await Product.findById(req.params.productId).select(
+      "name price _id productImage"
+    );
+    // check if the returned doc is not null
+    if (doc) {
+      // Success response
+      return res.status(200).json({
+        id: doc._id,
+        name: doc.name,
+        price: doc.price,
+        productImage: doc.productImage || "No product image available",
       });
+    }
+    // Can not find product response
+    res.status(404).json({ message: "No valid entry found for provided ID" });
+  } catch (error) {
+    // Error response
+    res.status(500).json({
+      error: error,
     });
+  }
 });
 
 // Handle incoming PATCH requests to /products/productId
-router.patch("/:productId", (req, res, next) => {
+router.patch("/:productId", async (req, res, next) => {
+  // product id
   const id = req.params.productId;
+  // update operations
   const updateOps = {};
+  // add name property if defined
   if (req.body.name != undefined) {
     updateOps["name"] = req.body.name;
   }
+  // add price property if defined
   if (req.body.price != undefined) {
     updateOps["price"] = req.body.price;
   }
-  // Update product
-  Product.update({ _id: id }, { $set: updateOps })
-    .exec()
-    .then((result) => {
-      const response = {
-        message: "Product updated",
-        request: {
-          type: "GET",
-          url: "http://localhost:3000/products/" + id,
-        },
-      };
-      res.status(200).json(response);
-    })
-    .catch((error) => {
-      console.log(error);
-      res.status(500).json({
-        error: error,
-      });
+
+  try {
+    // Update product with the given id
+    await Product.update({ _id: id }, { $set: updateOps });
+    const response = {
+      message: "Product updated",
+      request: {
+        type: "GET",
+        url: "http://localhost:3000/products/" + id,
+      },
+    };
+    // Success response
+    res.status(200).json(response);
+  } catch (error) {
+    // Error response
+    res.status(500).json({
+      error: error,
     });
+  }
 });
 
 // Handle incoming DELETE requests to /products/productId
-router.delete("/:productId", (req, res, next) => {
+router.delete("/:productId", async (req, res, next) => {
+  // product id
   const id = req.params.productId;
-
-  // Find product with the given id
-  Product.remove({ _id: id })
-    .exec()
-    .then((result) => {
-      res.status(200).json({
-        message: "Product deleted",
-      });
-    })
-    .catch((error) => {
-      res.status(404).json({
-        message: "No valid entry found for provided ID",
-        error: error,
-      });
+  try {
+    // Remove product from the database
+    await Product.remove({ _id: id });
+    // Success response
+    res.status(200).json({
+      message: "Product deleted",
     });
+  } catch (error) {
+    // Error response
+    res.status(404).json({
+      message: "No valid entry found for provided ID",
+      error: error,
+    });
+  }
 });
 
 module.exports = router;
