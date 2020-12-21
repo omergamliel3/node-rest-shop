@@ -1,8 +1,10 @@
 const express = require("express");
 const router = express.Router();
 const mongoose = require("mongoose");
-const User = require("../models/user");
 const bcrypt = require("bcrypt");
+var jwt = require("jsonwebtoken");
+
+const User = require("../models/user");
 
 // Handle incoming POST requests to /users/signup
 router.post("/signup", async (req, res, next) => {
@@ -37,28 +39,36 @@ router.post("/signup", async (req, res, next) => {
   }
 });
 
-// Handle incoming POST requests to /users/signin
-router.get("/signin", async (req, res, next) => {
+// Handle incoming POST requests to /users/login
+router.post("/login", async (req, res, next) => {
   const docs = await User.find({ email: req.body.email });
   if (docs.length == 0) {
     // Email not found response
-    return res.status(500).json({
-      message: "Email is not found",
+    return res.status(401).json({
+      message: "Auth failed",
     });
   }
   // Compare the given password with the hash password from the database
   const match = await bcrypt.compare(req.body.password, docs[0].password);
   // Password match
   if (match) {
-    // Success response
-    // return JWT with the response
+    // Create token
+    const token = jwt.sign(
+      { email: docs[0].email, userId: docs[0]._id },
+      process.env.JWT_SECRET_KEY,
+      {
+        expiresIn: "1h",
+      }
+    );
+    // Success response 86400
     res.status(200).json({
-      message: "email and password are valid",
+      auth: true,
+      token: token,
     });
   } else {
     // Wrong password response
-    res.status(500).json({
-      message: "Wrong password",
+    res.status(401).json({
+      message: "Auth failed",
     });
   }
 });
@@ -78,6 +88,21 @@ router.delete("/:userId", async (req, res, next) => {
       error: error,
     });
   }
+});
+
+router.get("/me", (req, res) => {
+  const token = req.headers["x-access-token"];
+  if (!token)
+    return res.status(401).send({ auth: false, message: "No token provided." });
+
+  jwt.verify(token, process.env.JWT_SECRET_KEY, (err, decoded) => {
+    if (err)
+      return res
+        .status(500)
+        .send({ auth: false, message: "Failed to authenticate token." });
+
+    res.status(200).send(decoded);
+  });
 });
 
 module.exports = router;
