@@ -8,7 +8,6 @@ const productsRoutes = require("./api/routes/products");
 const ordersRoutes = require("./api/routes/orders");
 const usersRoutes = require("./api/routes/users");
 
-usersRoutes;
 // Setup mongoose
 mongoose.connect(
   "mongodb+srv://admin:" +
