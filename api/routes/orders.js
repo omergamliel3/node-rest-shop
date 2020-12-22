@@ -1,8 +1,6 @@
 const express = require("express");
 const router = express.Router();
-
 const checkAuth = require("../middleware/check_auth");
-
 const OrdersController = require("../controllers/orders");
 
 // Handle incoming GET requests to /orders
