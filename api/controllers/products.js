@@ -5,7 +5,9 @@ const Product = require("../models/product");
 exports.products_get_all = async (req, res, next) => {
   try {
     // Get all products from the database
-    const docs = await Product.find().select("name price _id productImage");
+    const docs = await Product.find().select(
+      "name price _id productImage quantity"
+    );
     // Create response
     const response = {
       count: docs.length,
@@ -14,6 +16,7 @@ exports.products_get_all = async (req, res, next) => {
           id: doc._id,
           name: doc.name,
           price: doc.price,
+          quantity: doc.quantity,
           productImage: doc.productImage || "No product image available",
           request: {
             type: "GET",
@@ -39,6 +42,7 @@ exports.products_create_product = async (req, res, next) => {
     _id: new mongoose.Types.ObjectId(),
     name: req.body.name,
     price: req.body.price,
+    quantity: req.body.quantity,
     productImage: req.file.path,
   });
 
@@ -52,6 +56,7 @@ exports.products_create_product = async (req, res, next) => {
         id: doc._id,
         name: doc.name,
         price: doc.price,
+        quantity: doc.quantity,
         productImage: doc.productImage || "No product image available",
       },
     };
@@ -70,7 +75,7 @@ exports.products_get_product = async (req, res, next) => {
   try {
     // Find product with the given id
     const doc = await Product.findById(req.params.productId).select(
-      "name price _id productImage"
+      "name price _id productImage quantity"
     );
     // check if the returned doc is not null
     if (doc) {
@@ -79,6 +84,7 @@ exports.products_get_product = async (req, res, next) => {
         id: doc._id,
         name: doc.name,
         price: doc.price,
+        quantity: doc.quantity,
         productImage: doc.productImage || "No product image available",
       });
     }
@@ -105,6 +111,10 @@ exports.products_update_product = async (req, res, next) => {
   // add price property if defined
   if (req.body.price != undefined) {
     updateOps["price"] = req.body.price;
+  }
+  // add quantity property if defined
+  if (req.body.quantity != undefined) {
+    updateOps["quantity"] = req.body.quantity;
   }
 
   try {
