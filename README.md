@@ -1,4 +1,4 @@
-# node-rest-shop
+# Node REST shop
 
 A simple Node js shop RESTful API project.
 
