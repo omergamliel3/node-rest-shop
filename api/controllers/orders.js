@@ -88,7 +88,7 @@ exports.orders_create_order = async (req, res, next) => {
     };
 
     // Return success response
-    res.status(200).json(response);
+    res.status(201).json(response);
   } catch (error) {
     res.status(500).json({
       error: error,
